@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font: 13px system-ui, sans-serif; margin: 12px; color: #222; background: #fafafa; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #c33; }
+  .dot.on { background: #2a2; }
+  #status { flex: 1; }
+  button { font: inherit; padding: 3px 10px; }
+  #log { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;
+         border-top: 1px solid #ddd; font-family: Consolas, monospace; font-size: 12px; }
+  #log li { padding: 3px 0; border-bottom: 1px solid #eee; }
+  .err { color: #c33; }
+  .hint { color: #777; font-size: 12px; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <span id="dot" class="dot"></span>
+    <span id="status">Starting…</span>
+    <button id="toggle">Stop</button>
+    <button id="reload" title="Reload bridge code">↻</button>
+  </div>
+  <p class="hint">Keep this window open while Claude works — it is the bridge's heartbeat.</p>
+  <ul id="log"></ul>
+<script>
+  var running = false;
+  function setStatus(s) {
+    running = !!s.running;
+    document.getElementById("dot").className = running ? "dot on" : "dot";
+    document.getElementById("status").textContent =
+      running ? "Listening on 127.0.0.1:" + s.port : (s.error ? "Error: " + s.error : "Stopped");
+    document.getElementById("toggle").textContent = running ? "Stop" : "Start";
+  }
+  function addLog(e) {
+    var li = document.createElement("li");
+    li.textContent = e.at + "  " + e.method + "  " + (e.ok ? "ok" : "ERROR") + "  " + e.ms + "ms";
+    if (!e.ok) li.className = "err";
+    var log = document.getElementById("log");
+    log.insertBefore(li, log.firstChild);
+    while (log.children.length > 200) log.removeChild(log.lastChild);
+  }
+  document.getElementById("toggle").onclick = function () { running ? sketchup.stop() : sketchup.start(); };
+  document.getElementById("reload").onclick = function () { sketchup.reload(); };
+  setInterval(function () { sketchup.tick(); }, 50);
+  sketchup.ready();
+</script>
+</body>
+</html>
